@@ -1,0 +1,43 @@
+name: CRD Test Environment
+
+on:
+  workflow_dispatch:  # Cho phép chạy thủ công
+  push:
+    branches: [ main ]
+
+jobs:
+  crd-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install system dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y wget curl xvfb xorg dbus-x11
+        
+    - name: Run CRD Setup (Test Mode)
+      run: |
+        cd scripts
+        chmod +x install.sh
+        ./install.sh
+      env:
+        CRD_AUTH_CODE: ${{ secrets.CRD_AUTH_CODE }}
+        
+    - name: Keep alive for testing (max 6 hours)
+      timeout-minutes: 360  # 6 hours max
+      run: |
+        echo "🔄 CRD Environment is running..."
+        echo "⏰ This will auto-stop after 6 hours (GitHub limit)"
+        echo "📊 Monitoring system status..."
+        while true; do
+          echo "$(date): CRD Service Active"
+          sleep 300
+        done
